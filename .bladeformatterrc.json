@@ -1,0 +1,9 @@
+{
+    "indentSize": 1,
+    "wrapAttributes": "preserve-aligned",
+    "wrapAttributesMinAttrs": 2,
+    "endWithNewline": true,
+    "useTabs": true,
+    "sortTailwindcssClasses": true,
+    "noPhpSyntaxCheck": false
+}

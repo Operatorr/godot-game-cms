@@ -9,3 +9,17 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+@plugin "daisyui" {
+    themes: dim --default;
+}
+
+pre {
+	@apply bg-base-300 text-base-content my-4 p-4 rounded overflow-x-auto;
+}
+
+code {
+	@apply text-sm leading-relaxed;
+}
+
+[x-cloak] { display: none !important; }
