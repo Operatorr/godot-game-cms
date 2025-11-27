@@ -1,53 +1,67 @@
-<div class="navbar bg-base-200">
-	<div class="navbar-start">
-		<h1 class="btn btn-ghost text-xl">Laravel Starter</h1>
-		@auth
-			<div class="ml-4">
-				<span class="text-sm opacity-70">Welcome,</span>
-				<span class="font-semibold">{{ Auth::user()->name }}</span>
+<!-- Main Navigation -->
+<nav x-data="{ scrolled: false, mobileMenuOpen: false }"
+	x-init="window.addEventListener('scroll', () => scrolled = window.scrollY > 50)"
+	:class="{ 'bg-base-300/95 backdrop-blur-md shadow-lg': scrolled, 'bg-transparent': !scrolled }"
+	class="fixed top-10 left-0 right-0 z-40 transition-all duration-300">
+
+	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+		<div class="flex items-center justify-between h-16">
+			<!-- Logo -->
+			<a href="/" class="flex items-center gap-3 group">
+				<div class="w-10 h-10 bg-primary rounded flex items-center justify-center glow-blood">
+					<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-primary-content" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+					</svg>
+				</div>
+				<span class="font-cinzel text-xl font-bold text-bone tracking-wider group-hover:text-secondary transition-colors">
+					OMEGA REALM
+				</span>
+			</a>
+
+			<!-- Desktop Menu -->
+			<div class="hidden lg:flex items-center gap-8">
+				<a href="/" class="nav-link font-semibold text-bone hover:text-secondary transition-colors tracking-wide">Home</a>
+				<a href="/game" class="nav-link font-semibold text-bone/80 hover:text-secondary transition-colors tracking-wide">Game</a>
+				<a href="/faq" class="nav-link font-semibold text-bone/80 hover:text-secondary transition-colors tracking-wide">FAQ</a>
+				<a href="/community" class="nav-link font-semibold text-bone/80 hover:text-secondary transition-colors tracking-wide">Community</a>
+				<a href="/press" class="nav-link font-semibold text-bone/80 hover:text-secondary transition-colors tracking-wide">Press</a>
 			</div>
-		@endauth
-	</div>
-	<div class="navbar-center">
-		<ul class="menu bg-base-200 lg:menu-horizontal rounded-box">
-			<li>
-				<a href="/" wire:navigate>
-					{{-- <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-					</svg> --}}
-					Home
-				</a>
-			</li>
-			<li>
-				<a href="/about" wire:navigate>
-					{{-- <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-					</svg> --}}
-					About
-				</a>
-			</li>
-			<li>
-				<a href="/contact" wire:navigate>
-					{{-- <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-					</svg> --}}
-					Contact
-				</a>
-			</li>
-		</ul>
-	</div>
-	<div class="navbar-end">
-		<div class="dropdown dropdown-end">
-			<div tabindex="0" role="button" class="btn btn-ghost">
-				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5H9m12 0v6m0 6v6M9 5v6m0 6h12"></path>
+
+			<!-- Mobile Menu Button -->
+			<button @click="mobileMenuOpen = !mobileMenuOpen"
+				class="lg:hidden p-2 text-bone hover:text-secondary transition-colors"
+				aria-label="Toggle menu">
+				<svg x-show="!mobileMenuOpen" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
 				</svg>
-				Theme
-			</div>
-			<ul tabindex="0" class="dropdown-content z-1 menu bg-base-100 rounded-box w-52 p-2 shadow">
-				<li><a href="#" onclick="changeTheme('pastel')">🦄 Pastel</a></li>
-				<li><a href="#" onclick="changeTheme('synthwave')">🌃 Synthwave</a></li>
-			</ul>
+				<svg x-show="mobileMenuOpen" x-cloak xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
 		</div>
 	</div>
-</div>
+
+	<!-- Mobile Menu -->
+	<div x-show="mobileMenuOpen"
+		x-cloak
+		x-transition:enter="transition ease-out duration-200"
+		x-transition:enter-start="opacity-0 -translate-y-4"
+		x-transition:enter-end="opacity-100 translate-y-0"
+		x-transition:leave="transition ease-in duration-150"
+		x-transition:leave-start="opacity-100 translate-y-0"
+		x-transition:leave-end="opacity-0 -translate-y-4"
+		class="lg:hidden bg-base-300/95 backdrop-blur-md border-t border-base-100">
+		<div class="max-w-7xl mx-auto px-4 py-4 space-y-2">
+			<a href="/" class="block py-3 px-4 text-bone hover:text-secondary hover:bg-base-200 rounded transition-colors font-semibold tracking-wide">Home</a>
+			<a href="/game" class="block py-3 px-4 text-bone/80 hover:text-secondary hover:bg-base-200 rounded transition-colors font-semibold tracking-wide">Game</a>
+			<a href="/faq" class="block py-3 px-4 text-bone/80 hover:text-secondary hover:bg-base-200 rounded transition-colors font-semibold tracking-wide">FAQ</a>
+			<a href="/community" class="block py-3 px-4 text-bone/80 hover:text-secondary hover:bg-base-200 rounded transition-colors font-semibold tracking-wide">Community</a>
+			<a href="/press" class="block py-3 px-4 text-bone/80 hover:text-secondary hover:bg-base-200 rounded transition-colors font-semibold tracking-wide">Press</a>
+
+			<div class="border-t border-base-100 pt-4 mt-4 space-y-2">
+				<a href="/login" class="block py-3 px-4 text-bone/80 hover:text-secondary hover:bg-base-200 rounded transition-colors font-semibold">Sign In</a>
+				<a href="/register" class="block py-3 px-4 bg-primary text-primary-content hover:bg-primary/80 rounded transition-colors font-semibold text-center">Create Account</a>
+			</div>
+		</div>
+	</div>
+</nav>
