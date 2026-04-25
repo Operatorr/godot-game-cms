@@ -2,57 +2,48 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'username',
         'email',
+        'password',
         'password_hash',
         'region',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
+        'password',
         'password_hash',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
-            'password_hash' => 'hashed',
         ];
     }
 
-    /**
-     * Get the password for authentication.
-     * Override to use 'password_hash' column instead of 'password'.
-     */
     public function getAuthPassword(): string
     {
         return $this->password_hash;
+    }
+
+    // Breeze sets a `password` attribute; our column is `password_hash`.
+    public function setPasswordAttribute(string $value): void
+    {
+        $this->attributes['password_hash'] = Hash::needsRehash($value)
+            ? Hash::make($value)
+            : $value;
     }
 }

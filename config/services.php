@@ -35,12 +35,6 @@ return [
         ],
     ],
 
-    'workos' => [
-        'client_id' => env('WORKOS_CLIENT_ID'),
-        'secret' => env('WORKOS_API_KEY'),
-        'redirect_url' => env('WORKOS_REDIRECT_URL'),
-    ],
-
     'openrouter' => [
         'key' => env('OPENROUTER_API_KEY'),
         'host' => env('OPENROUTER_API_HOST', "https://openrouter.ai/api/v1"),
