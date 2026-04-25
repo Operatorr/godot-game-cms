@@ -5,6 +5,23 @@
     $characters = collect($characters ?? []);
     $displayCharacters = $characters->take($maxSlots);
     $boundSlots = min($characters->count(), $maxSlots);
+    $user = auth()->user();
+    $latestCharacter = $characters
+        ->filter(fn ($character) => filled($character->created_at))
+        ->sortByDesc('created_at')
+        ->first();
+    $accountTier = match (true) {
+        $boundSlots >= $maxSlots => 'Ascendant',
+        $boundSlots >= 3 => 'Adept',
+        $user?->hasVerifiedEmail() => 'Initiate',
+        default => 'Unsealed',
+    };
+    $accountStats = [
+        ['Souls Bound', $boundSlots . ' / ' . $maxSlots],
+        ['Account Tier', $accountTier],
+        ['Pact Sealed', $user?->created_at?->format('M Y') ?? 'Unknown'],
+        ['Last Hunt', $latestCharacter?->created_at?->diffForHumans() ?? 'No hunts yet'],
+    ];
     $tints = ['blood', 'gold', 'eldritch'];
     $sigils = ['eye', 'blade', 'moon'];
     $classes = ['Warrior', 'Mage', 'Ranger'];
@@ -48,12 +65,7 @@
 
             {{-- Account meta strip --}}
             <dl class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-px max-w-3xl mx-auto bg-bone/5 border border-bone/10 rounded-sm overflow-hidden">
-                @foreach ([
-                    ['Souls Bound', $boundSlots . ' / ' . $maxSlots],
-                    ['Account Tier', 'Initiate'],
-                    ['Pact Sealed', auth()->user()->created_at?->format('M Y') ?? 'Unknown'],
-                    ['Last Hunt', '3 hours ago'],
-                ] as $stat)
+                @foreach ($accountStats as $stat)
                     <div class="bg-base-300/80 px-4 py-4">
                         <dt class="font-cinzel text-[9px] tracking-[0.3em] text-secondary/80 uppercase">{{ $stat[0] }}</dt>
                         <dd class="font-cinzel text-bone mt-1 tracking-wider">{{ $stat[1] }}</dd>
