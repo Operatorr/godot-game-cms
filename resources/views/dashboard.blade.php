@@ -1,43 +1,16 @@
 @extends('layouts.app')
 
 @php
-    // Placeholder roster — wire to real Character model when ready
-    $characters = [
-        [
-            'name' => 'Vael of the Ashen Choir',
-            'class' => 'Voidcaller',
-            'level' => 47,
-            'level_max' => 60,
-            'world' => 'Mournhold',
-            'pvp' => 'Open',
-            'last_seen' => '3 hours ago',
-            'sigil' => 'eye',
-            'tint' => 'eldritch',
-        ],
-        [
-            'name' => 'Korrath Ironmourn',
-            'class' => 'Ironclad',
-            'level' => 62,
-            'level_max' => 70,
-            'world' => 'Grimhold',
-            'pvp' => 'Hardcore',
-            'last_seen' => 'Yesterday',
-            'sigil' => 'blade',
-            'tint' => 'blood',
-        ],
-        [
-            'name' => 'Sibyl Wraithveil',
-            'class' => 'Hollowed Seer',
-            'level' => 28,
-            'level_max' => 30,
-            'world' => 'Mournhold',
-            'pvp' => 'Sanctum',
-            'last_seen' => '6 days ago',
-            'sigil' => 'moon',
-            'tint' => 'gold',
-        ],
-    ];
-    $maxSlots = 6;
+    $maxSlots ??= 6;
+    $characters = collect($characters ?? []);
+    $displayCharacters = $characters->take($maxSlots);
+    $boundSlots = min($characters->count(), $maxSlots);
+    $tints = ['blood', 'gold', 'eldritch'];
+    $sigils = ['eye', 'blade', 'moon'];
+    $classes = ['Warrior', 'Mage', 'Ranger'];
+    $races = ['Human', 'Elf', 'Orc'];
+    $realms = ['Asia (Singapore)'];
+    $modes = ['softcore' => 'Softcore', 'hardcore' => 'Hardcore'];
 @endphp
 
 @section('content')
@@ -76,7 +49,7 @@
             {{-- Account meta strip --}}
             <dl class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-px max-w-3xl mx-auto bg-bone/5 border border-bone/10 rounded-sm overflow-hidden">
                 @foreach ([
-                    ['Souls Bound', count($characters) . ' / ' . $maxSlots],
+                    ['Souls Bound', $boundSlots . ' / ' . $maxSlots],
                     ['Account Tier', 'Initiate'],
                     ['Pact Sealed', auth()->user()->created_at?->format('M Y') ?? 'Unknown'],
                     ['Last Hunt', '3 hours ago'],
@@ -100,7 +73,7 @@
                         <h2 class="font-cinzel text-2xl sm:text-3xl text-bone tracking-[0.15em] mt-1">ROSTER OF SOULS</h2>
                     </div>
                     <span class="font-cinzel text-xs text-bone/40 tracking-[0.3em]">
-                        {{ count($characters) }} / {{ $maxSlots }} BOUND
+                        {{ $boundSlots }} / {{ $maxSlots }} BOUND
                     </span>
                 </div>
 
@@ -108,15 +81,22 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
                     {{-- Bound characters --}}
-                    @foreach ($characters as $i => $char)
+                    @foreach ($displayCharacters as $i => $char)
                         @php
-                            $tint = $char['tint']; // blood | gold | eldritch
+                            $level = max(1, min(50, (int) ($char->level ?? 1)));
+                            $levelMax = 50;
+                            $characterClass = $char->class ?? 'Unbound';
+                            $race = $char->race ?? 'Human';
+                            $realm = $char->realm ?? 'Asia (Singapore)';
+                            $mode = $modes[$char->mode ?? 'softcore'] ?? 'Softcore';
+                            $sigil = $sigils[$i % count($sigils)];
+                            $tint = $tints[$i % count($tints)]; // blood | gold | eldritch
                             $tintClass = [
                                 'blood'    => ['ring' => 'border-primary/60',   'bar' => 'bg-primary',         'glow' => 'group-hover:shadow-[0_0_30px_rgba(107,28,28,0.55)]', 'accent' => 'text-primary'],
                                 'gold'     => ['ring' => 'border-secondary/60', 'bar' => 'bg-secondary',       'glow' => 'group-hover:shadow-[0_0_30px_rgba(154,123,79,0.55)]','accent' => 'text-secondary'],
                                 'eldritch' => ['ring' => 'border-accent/60',    'bar' => 'bg-accent',          'glow' => 'group-hover:shadow-[0_0_30px_rgba(74,59,107,0.6)]', 'accent' => 'text-eldritch-light'],
                             ][$tint];
-                            $pct = min(100, round($char['level'] / max(1,$char['level_max']) * 100));
+                            $pct = min(100, round($level / max(1, $levelMax) * 100));
                         @endphp
 
                         <article class="group relative">
@@ -150,7 +130,7 @@
                                             </svg>
                                             {{-- Class sigil --}}
                                             <svg class="relative h-9 w-9 {{ $tintClass['accent'] }}" viewBox="0 0 24 24" fill="currentColor">
-                                                @switch($char['sigil'])
+                                                @switch($sigil)
                                                     @case('blade')
                                                         <path d="M12 1l1 5 5 1-5 1-1 13-1-13-5-1 5-1 1-5z M11 14h2v8h-2z"/>
                                                         @break
@@ -166,19 +146,19 @@
                                             </svg>
                                         </div>
                                         {{-- World tag --}}
-                                        <p class="text-center mt-3 font-cinzel text-[9px] tracking-[0.25em] text-bone/40 uppercase">{{ $char['world'] }}</p>
+                                        <p class="text-center mt-3 font-cinzel text-[9px] tracking-[0.25em] text-bone/40 uppercase">{{ $realm }}</p>
                                     </div>
 
                                     {{-- Body --}}
                                     <div class="min-w-0 flex-1">
-                                        <p class="font-cinzel text-[10px] tracking-[0.4em] {{ $tintClass['accent'] }} uppercase">{{ $char['class'] }}</p>
-                                        <h3 class="font-cinzel text-bone text-lg tracking-wider truncate mt-0.5">{{ $char['name'] }}</h3>
+                                        <p class="font-cinzel text-[10px] tracking-[0.4em] {{ $tintClass['accent'] }} uppercase">{{ $characterClass }}</p>
+                                        <h3 class="font-cinzel text-bone text-lg tracking-wider truncate mt-0.5">{{ $char->name }}</h3>
 
                                         {{-- Level rune bar --}}
                                         <div class="mt-3">
                                             <div class="flex items-baseline justify-between">
                                                 <span class="font-cinzel text-[10px] tracking-[0.3em] text-bone/50 uppercase">Level</span>
-                                                <span class="font-cinzel text-bone tracking-wider"><span class="text-shadow-blood">{{ $char['level'] }}</span><span class="text-bone/40 text-xs"> / {{ $char['level_max'] }}</span></span>
+                                                <span class="font-cinzel text-bone tracking-wider"><span class="text-shadow-blood">{{ $level }}</span><span class="text-bone/40 text-xs"> / {{ $levelMax }}</span></span>
                                             </div>
                                             <div class="mt-1.5 h-1.5 bg-base-300 border border-bone/10 relative overflow-hidden">
                                                 <div class="h-full {{ $tintClass['bar'] }}" style="width: {{ $pct }}%; box-shadow: 0 0 12px currentColor;"></div>
@@ -193,24 +173,19 @@
 
                                         {{-- Meta --}}
                                         <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 font-cinzel text-[10px] tracking-[0.25em] uppercase">
-                                            <span class="text-bone/50">{{ $char['pvp'] }}</span>
+                                            <span class="text-bone/50">{{ $race }}</span>
                                             <span class="text-bone/20">•</span>
-                                            <span class="text-bone/40">Last seen {{ $char['last_seen'] }}</span>
+                                            <span class="text-bone/50">{{ $mode }}</span>
+                                            <span class="text-bone/20">•</span>
+                                            <span class="text-bone/40">Bound {{ $char->created_at?->diffForHumans() ?? 'Unknown' }}</span>
                                         </div>
 
                                         {{-- Actions --}}
-                                        <div class="mt-5 flex items-center gap-3 pt-3 border-t border-bone/10">
-                                            <a href="#" class="font-cinzel text-[10px] tracking-[0.3em] uppercase text-bone/70 hover:text-secondary transition-colors">
-                                                Enter →
-                                            </a>
-                                            <span class="text-bone/15">|</span>
-                                            <a href="#" class="font-cinzel text-[10px] tracking-[0.3em] uppercase text-bone/50 hover:text-bone transition-colors">
-                                                Codex
-                                            </a>
-                                            <span class="ml-auto">
+                                        <div class="mt-5 flex items-center justify-end pt-3 border-t border-bone/10">
+                                            <span>
                                                 <button type="button"
                                                         x-data
-                                                        @click="$dispatch('open-banish', { id: {{ $i }}, name: '{{ $char['name'] }}' })"
+                                                        @click="$dispatch('open-banish', { id: {{ $char->id }}, name: @js($char->name) })"
                                                         class="font-cinzel text-[10px] tracking-[0.3em] uppercase text-bone/30 hover:text-error transition-colors cursor-pointer">
                                                     Banish
                                                 </button>
@@ -229,7 +204,7 @@
                     @endforeach
 
                     {{-- Empty slot — Forge new soul --}}
-                    @if (count($characters) < $maxSlots)
+                    @if ($boundSlots < $maxSlots)
                         <button type="button"
                                 x-data
                                 @click="$dispatch('open-forge')"
@@ -258,7 +233,7 @@
                     @endif
 
                     {{-- Locked / sealed slots --}}
-                    @for ($s = count($characters) + 1; $s < $maxSlots; $s++)
+                    @for ($s = $boundSlots + 1; $s < $maxSlots; $s++)
                         <div class="relative opacity-60">
                             <div class="relative bg-base-300/30 border border-bone/10 overflow-hidden min-h-full"
                                  style="clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);">
@@ -279,7 +254,20 @@
 
             {{-- ═══════════  SETTINGS — RITES  ═══════════ --}}
             <aside class="lg:col-span-4"
-                   x-data="{ tab: 'identity' }">
+                   x-data="{
+                       tab: 'identity',
+                       panelHeight: 0,
+                       updatePanelHeight() {
+                           this.$nextTick(() => {
+                               requestAnimationFrame(() => {
+                                   const panel = this.$refs[`${this.tab}Panel`];
+                                   this.panelHeight = panel ? panel.offsetHeight : 0;
+                               });
+                           });
+                       },
+                   }"
+                   x-init="updatePanelHeight(); $watch('tab', () => updatePanelHeight())"
+                   @resize.window.debounce.100ms="updatePanelHeight()">
                 <div class="flex items-end justify-between mb-8 border-b border-bone/15 pb-4">
                     <div>
                         <p class="font-cinzel text-[10px] tracking-[0.5em] text-secondary uppercase">Chapter II</p>
@@ -304,116 +292,127 @@
                     @endforeach
                 </nav>
 
-                {{-- ── Identity ── --}}
-                <section x-show="tab === 'identity'" x-cloak x-transition.opacity.duration.300ms class="space-y-5">
-                    <div class="bg-base-200/80 border border-bone/10 p-5 relative overflow-hidden">
-                        <div class="absolute inset-0 bg-noise opacity-30 pointer-events-none"></div>
-                        <div class="relative">
-                            <p class="font-cinzel text-[10px] tracking-[0.4em] text-secondary uppercase mb-4">Sigil & Name</p>
-                            <form action="#" method="POST" class="space-y-4">
-                                @csrf
-                                <div>
-                                    <label class="font-cinzel text-[10px] tracking-[0.3em] text-bone/60 uppercase block mb-1.5">True Name</label>
-                                    <input type="text" name="name" value="{{ auth()->user()->name ?? '' }}"
-                                           class="w-full bg-base-300 border border-bone/15 focus:border-secondary/60 focus:outline-none font-rajdhani text-bone px-3 py-2.5 text-sm tracking-wide rounded-sm transition-colors">
-                                </div>
-                                <div>
-                                    <label class="font-cinzel text-[10px] tracking-[0.3em] text-bone/60 uppercase block mb-1.5">Sending Vessel</label>
-                                    <input type="email" name="email" value="{{ auth()->user()->email ?? '' }}"
-                                           class="w-full bg-base-300 border border-bone/15 focus:border-secondary/60 focus:outline-none font-rajdhani text-bone px-3 py-2.5 text-sm tracking-wide rounded-sm transition-colors">
-                                </div>
-                                <button type="submit" class="font-cinzel text-[10px] tracking-[0.3em] uppercase text-bone/80 hover:text-secondary border-b border-bone/20 hover:border-secondary/60 pb-1 transition-colors cursor-pointer">
-                                    Inscribe Changes →
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
-                    {{-- Verification status --}}
-                    @if (auth()->user() && method_exists(auth()->user(), 'hasVerifiedEmail'))
-                        <div class="bg-base-200/40 border border-bone/10 px-5 py-3 flex items-center gap-3">
-                            <span class="h-2 w-2 rounded-full {{ auth()->user()->hasVerifiedEmail() ? 'bg-success' : 'bg-warning' }} animate-pulse"></span>
-                            <p class="font-cinzel text-[10px] tracking-[0.3em] uppercase {{ auth()->user()->hasVerifiedEmail() ? 'text-bone/60' : 'text-warning' }}">
-                                {{ auth()->user()->hasVerifiedEmail() ? 'Vessel Sealed' : 'Vessel Awaits Sealing' }}
-                            </p>
-                        </div>
-                    @endif
-                </section>
-
-                {{-- ── Wards (password) ── --}}
-                <section x-show="tab === 'wards'" x-cloak x-transition.opacity.duration.300ms class="space-y-5">
-                    <div class="bg-base-200/80 border border-bone/10 p-5 relative overflow-hidden">
-                        <div class="absolute inset-0 bg-noise opacity-30 pointer-events-none"></div>
-                        <div class="relative">
-                            <p class="font-cinzel text-[10px] tracking-[0.4em] text-secondary uppercase mb-2">Renew the Ward</p>
-                            <p class="font-rajdhani text-bone/40 italic text-xs mb-5">A strong ward shields against the watchers in the dark.</p>
-                            <form action="{{ Route::has('password.update') ? route('password.update') : '#' }}" method="POST" class="space-y-4">
-                                @csrf
-                                @method('PUT')
-                                @foreach ([
-                                    ['current_password', 'Current Ward'],
-                                    ['password',         'New Ward'],
-                                    ['password_confirmation', 'Confirm the New Ward'],
-                                ] as [$n, $l])
+                <div class="relative transition-[min-height] duration-300 ease-out"
+                     :style="`min-height: ${panelHeight}px`">
+                    {{-- ── Identity ── --}}
+                    <section x-ref="identityPanel"
+                             x-show="tab === 'identity'"
+                             x-cloak
+                             x-transition.opacity.duration.300ms
+                             :class="tab === 'identity' ? 'pointer-events-auto' : 'pointer-events-none'"
+                             class="absolute inset-x-0 top-0 space-y-5">
+                        <div class="bg-base-200/80 border border-bone/10 p-5 relative overflow-hidden">
+                            <div class="absolute inset-0 bg-noise opacity-30 pointer-events-none"></div>
+                            <div class="relative">
+                                <p class="font-cinzel text-[10px] tracking-[0.4em] text-secondary uppercase mb-4">Sigil & Name</p>
+                                <div class="space-y-4">
                                     <div>
-                                        <label class="font-cinzel text-[10px] tracking-[0.3em] text-bone/60 uppercase block mb-1.5">{{ $l }}</label>
-                                        <input type="password" name="{{ $n }}" autocomplete="new-password"
-                                               class="w-full bg-base-300 border border-bone/15 focus:border-secondary/60 focus:outline-none font-rajdhani text-bone px-3 py-2.5 text-sm tracking-wide rounded-sm transition-colors">
+                                        <label class="font-cinzel text-[10px] tracking-[0.3em] text-bone/60 uppercase block mb-1.5">Sending Vessel</label>
+                                        <input type="email" value="{{ auth()->user()->email ?? '' }}" disabled
+                                               class="w-full bg-base-300/40 border border-bone/10 font-rajdhani text-bone/40 px-3 py-2.5 text-sm tracking-wide rounded-sm cursor-not-allowed">
+                                        <p class="font-rajdhani text-bone/30 text-[10px] mt-1.5">Contact support to change your bound vessel.</p>
                                     </div>
-                                @endforeach
-                                <button type="submit" class="font-cinzel text-[10px] tracking-[0.3em] uppercase text-bone/80 hover:text-secondary border-b border-bone/20 hover:border-secondary/60 pb-1 transition-colors cursor-pointer">
-                                    Renew the Ward →
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </section>
-
-                {{-- ── Severance ── --}}
-                <section x-show="tab === 'severance'" x-cloak x-transition.opacity.duration.300ms class="space-y-5">
-                    <div class="bg-gradient-to-br from-base-200/80 to-primary/10 border border-primary/40 p-5 relative overflow-hidden">
-                        <div class="absolute inset-0 bg-noise opacity-30 pointer-events-none"></div>
-                        <div class="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-primary/20 blur-3xl pointer-events-none"></div>
-                        <div class="relative">
-                            <p class="font-cinzel text-[10px] tracking-[0.4em] text-error uppercase mb-2">⚠ Final Rites</p>
-                            <p class="font-rajdhani text-bone/70 text-sm mb-1 leading-relaxed">
-                                To sever the pact is to unmake every soul bound to this account.
-                            </p>
-                            <p class="font-rajdhani text-bone/40 italic text-xs mb-5">
-                                The ash will not be returned. The void does not refund.
-                            </p>
-
-                            <form action="{{ Route::has('profile.destroy') ? route('profile.destroy') : '#' }}" method="POST"
-                                  x-data="{ confirm: '' }" class="space-y-4">
-                                @csrf
-                                @method('DELETE')
-                                <div>
-                                    <label class="font-cinzel text-[10px] tracking-[0.3em] text-bone/60 uppercase block mb-1.5">
-                                        Inscribe your name: <span class="text-error">{{ auth()->user()->username ?? auth()->user()->name ?? '' }}</span>
-                                    </label>
-                                    <input type="text" x-model="confirm" placeholder="—"
-                                           class="w-full bg-base-300 border border-error/30 focus:border-error focus:outline-none font-cinzel text-error tracking-[0.2em] px-3 py-2.5 text-sm rounded-sm">
                                 </div>
-                                <input type="password" name="password" placeholder="Speak your ward"
-                                       class="w-full bg-base-300 border border-bone/15 focus:border-error/60 focus:outline-none font-rajdhani text-bone px-3 py-2.5 text-sm tracking-wide rounded-sm">
-                                <button type="submit"
-                                        :disabled="confirm !== '{{ auth()->user()->username ?? auth()->user()->name ?? '' }}'"
-                                        :class="confirm === '{{ auth()->user()->username ?? auth()->user()->name ?? '' }}' ? 'bg-error/90 hover:bg-error text-error-content cursor-pointer' : 'bg-base-300 text-bone/30 cursor-not-allowed'"
-                                        class="w-full font-cinzel text-xs tracking-[0.3em] uppercase border border-error/40 py-3 transition-all">
-                                    Sever the Pact Forever
-                                </button>
-                            </form>
+                            </div>
                         </div>
-                    </div>
 
-                    {{-- Logout --}}
-                    <form method="POST" action="{{ route('logout') }}" class="text-center pt-2">
-                        @csrf
-                        <button type="submit" class="font-cinzel text-[10px] tracking-[0.4em] uppercase text-bone/40 hover:text-bone border-b border-bone/15 hover:border-bone/40 pb-1 transition-colors cursor-pointer">
-                            Or, simply leave the sanctum
-                        </button>
-                    </form>
-                </section>
+                        {{-- Verification status --}}
+                        @if (auth()->user() && method_exists(auth()->user(), 'hasVerifiedEmail'))
+                            <div class="bg-base-200/40 border border-bone/10 px-5 py-3 flex items-center gap-3">
+                                <span class="h-2 w-2 rounded-full {{ auth()->user()->hasVerifiedEmail() ? 'bg-success' : 'bg-warning' }} animate-pulse"></span>
+                                <p class="font-cinzel text-[10px] tracking-[0.3em] uppercase {{ auth()->user()->hasVerifiedEmail() ? 'text-bone/60' : 'text-warning' }}">
+                                    {{ auth()->user()->hasVerifiedEmail() ? 'Vessel Sealed' : 'Vessel Awaits Sealing' }}
+                                </p>
+                            </div>
+                        @endif
+                    </section>
+
+                    {{-- ── Wards (password) ── --}}
+                    <section x-ref="wardsPanel"
+                             x-show="tab === 'wards'"
+                             x-cloak
+                             x-transition.opacity.duration.300ms
+                             :class="tab === 'wards' ? 'pointer-events-auto' : 'pointer-events-none'"
+                             class="absolute inset-x-0 top-0 space-y-5">
+                        <div class="bg-base-200/80 border border-bone/10 p-5 relative overflow-hidden">
+                            <div class="absolute inset-0 bg-noise opacity-30 pointer-events-none"></div>
+                            <div class="relative">
+                                <p class="font-cinzel text-[10px] tracking-[0.4em] text-secondary uppercase mb-2">Renew the Ward</p>
+                                <p class="font-rajdhani text-bone/40 italic text-xs mb-1">A strong ward shields against the watchers in the dark.</p>
+                                <p class="font-rajdhani text-bone/50 text-[10px] mb-5">This is your account password.</p>
+                                <form action="{{ Route::has('password.update') ? route('password.update') : '#' }}" method="POST" class="space-y-4">
+                                    @csrf
+                                    @method('PUT')
+                                    @foreach ([
+                                        ['current_password', 'Current Ward'],
+                                        ['password',         'New Ward'],
+                                        ['password_confirmation', 'Confirm the New Ward'],
+                                    ] as [$n, $l])
+                                        <div>
+                                            <label class="font-cinzel text-[10px] tracking-[0.3em] text-bone/60 uppercase block mb-1.5">{{ $l }}</label>
+                                            <input type="password" name="{{ $n }}" autocomplete="new-password"
+                                                   class="w-full bg-base-300 border border-bone/15 focus:border-secondary/60 focus:outline-none font-rajdhani text-bone px-3 py-2.5 text-sm tracking-wide rounded-sm transition-colors">
+                                        </div>
+                                    @endforeach
+                                    <button type="submit" class="font-cinzel text-[10px] tracking-[0.3em] uppercase text-bone/80 hover:text-secondary border-b border-bone/20 hover:border-secondary/60 pb-1 transition-colors cursor-pointer">
+                                        Renew the Ward →
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </section>
+
+                    {{-- ── Severance ── --}}
+                    <section x-ref="severancePanel"
+                             x-show="tab === 'severance'"
+                             x-cloak
+                             x-transition.opacity.duration.300ms
+                             :class="tab === 'severance' ? 'pointer-events-auto' : 'pointer-events-none'"
+                             class="absolute inset-x-0 top-0 space-y-5">
+                        <div class="bg-gradient-to-br from-base-200/80 to-primary/10 border border-primary/40 p-5 relative overflow-hidden">
+                            <div class="absolute inset-0 bg-noise opacity-30 pointer-events-none"></div>
+                            <div class="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-primary/20 blur-3xl pointer-events-none"></div>
+                            <div class="relative">
+                                <p class="font-cinzel text-[10px] tracking-[0.4em] text-error uppercase mb-2">⚠ Final Rites</p>
+                                <p class="font-rajdhani text-bone/70 text-sm mb-1 leading-relaxed">
+                                    To sever the pact is to unmake every soul bound to this account.
+                                </p>
+                                <p class="font-rajdhani text-bone/40 italic text-xs mb-5">
+                                    The ash will not be returned. The void does not refund.
+                                </p>
+
+                                <form action="{{ Route::has('profile.destroy') ? route('profile.destroy') : '#' }}" method="POST"
+                                      x-data="{ confirm: '' }" class="space-y-4">
+                                    @csrf
+                                    @method('DELETE')
+                                    <div>
+                                        <label class="font-cinzel text-[10px] tracking-[0.3em] text-bone/60 uppercase block mb-1.5">
+                                            Inscribe your name: <span class="text-error">{{ auth()->user()->username ?? auth()->user()->name ?? '' }}</span>
+                                        </label>
+                                        <input type="text" x-model="confirm" placeholder="—"
+                                               class="w-full bg-base-300 border border-error/30 focus:border-error focus:outline-none font-cinzel text-error tracking-[0.2em] px-3 py-2.5 text-sm rounded-sm">
+                                    </div>
+                                    <input type="password" name="password" placeholder="Speak your ward"
+                                           class="w-full bg-base-300 border border-bone/15 focus:border-error/60 focus:outline-none font-rajdhani text-bone px-3 py-2.5 text-sm tracking-wide rounded-sm">
+                                    <button type="submit"
+                                            :disabled="confirm !== '{{ auth()->user()->username ?? auth()->user()->name ?? '' }}'"
+                                            :class="confirm === '{{ auth()->user()->username ?? auth()->user()->name ?? '' }}' ? 'bg-error/90 hover:bg-error text-error-content cursor-pointer' : 'bg-base-300 text-bone/30 cursor-not-allowed'"
+                                            class="w-full font-cinzel text-xs tracking-[0.3em] uppercase border border-error/40 py-3 transition-all">
+                                        Sever the Pact Forever
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        {{-- Logout --}}
+                        <form method="POST" action="{{ route('logout') }}" class="text-center pt-2">
+                            @csrf
+                            <button type="submit" class="font-cinzel text-[10px] tracking-[0.4em] uppercase text-bone/40 hover:text-bone border-b border-bone/15 hover:border-bone/40 pb-1 transition-colors cursor-pointer">
+                                Or, simply leave the sanctum
+                            </button>
+                        </form>
+                    </section>
+                </div>
             </aside>
         </div>
 
@@ -440,41 +439,47 @@
                         <span class="h-px flex-1 bg-gradient-to-l from-secondary/60 to-transparent"></span>
                     </div>
 
-                    <form action="#" method="POST" class="space-y-4">
+                    <form action="{{ route('characters.store') }}" method="POST" class="space-y-4">
                         @csrf
                         <div>
                             <label class="font-cinzel text-[10px] tracking-[0.3em] text-bone/60 uppercase block mb-1.5">True Name of the Soul</label>
-                            <input type="text" name="character_name" required
+                            <input type="text" name="name" required maxlength="50"
                                    class="w-full bg-base-300 border border-bone/15 focus:border-secondary/60 focus:outline-none font-rajdhani text-bone px-3 py-2.5 text-sm tracking-wide rounded-sm">
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="font-cinzel text-[10px] tracking-[0.3em] text-bone/60 uppercase block mb-1.5">Vocation</label>
                                 <select name="class" class="w-full bg-base-300 border border-bone/15 focus:border-secondary/60 focus:outline-none font-rajdhani text-bone px-3 py-2.5 text-sm rounded-sm">
-                                    <option>Voidcaller</option>
-                                    <option>Ironclad</option>
-                                    <option>Hollowed Seer</option>
-                                    <option>Ash Reaper</option>
-                                    <option>Pale Surgeon</option>
+                                    @foreach ($classes as $class)
+                                        <option value="{{ $class }}">{{ $class }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div>
-                                <label class="font-cinzel text-[10px] tracking-[0.3em] text-bone/60 uppercase block mb-1.5">World</label>
-                                <select name="world" class="w-full bg-base-300 border border-bone/15 focus:border-secondary/60 focus:outline-none font-rajdhani text-bone px-3 py-2.5 text-sm rounded-sm">
-                                    <option>Mournhold</option>
-                                    <option>Grimhold</option>
-                                    <option>Pale Reach</option>
+                                <label class="font-cinzel text-[10px] tracking-[0.3em] text-bone/60 uppercase block mb-1.5">Ancestry</label>
+                                <select name="race" class="w-full bg-base-300 border border-bone/15 focus:border-secondary/60 focus:outline-none font-rajdhani text-bone px-3 py-2.5 text-sm rounded-sm">
+                                    @foreach ($races as $race)
+                                        <option value="{{ $race }}">{{ $race }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
                         <div>
-                            <p class="font-cinzel text-[10px] tracking-[0.3em] text-bone/60 uppercase mb-2">Pact Ruleset</p>
-                            <div class="grid grid-cols-3 gap-2">
-                                @foreach (['Sanctum', 'Open', 'Hardcore'] as $r)
+                            <label class="font-cinzel text-[10px] tracking-[0.3em] text-bone/60 uppercase block mb-1.5">Realm</label>
+                            <select name="realm" class="w-full bg-base-300 border border-bone/15 focus:border-secondary/60 focus:outline-none font-rajdhani text-bone px-3 py-2.5 text-sm rounded-sm">
+                                @foreach ($realms as $realm)
+                                    <option value="{{ $realm }}">{{ $realm }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <p class="font-cinzel text-[10px] tracking-[0.3em] text-bone/60 uppercase mb-2">Mode</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                @foreach ($modes as $value => $label)
                                     <label class="cursor-pointer">
-                                        <input type="radio" name="ruleset" value="{{ $r }}" class="peer sr-only" {{ $loop->first ? 'checked' : '' }}>
+                                        <input type="radio" name="mode" value="{{ $value }}" class="peer sr-only" {{ $loop->first ? 'checked' : '' }}>
                                         <div class="border border-bone/15 peer-checked:border-primary peer-checked:bg-primary/15 peer-checked:text-bone text-bone/50 hover:text-bone hover:border-bone/40 font-cinzel text-[10px] tracking-[0.3em] uppercase text-center py-2.5 transition-all">
-                                            {{ $r }}
+                                            {{ $label }}
                                         </div>
                                     </label>
                                 @endforeach
