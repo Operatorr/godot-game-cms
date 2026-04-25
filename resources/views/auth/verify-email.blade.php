@@ -27,7 +27,7 @@
             <button type="submit"
                     class="w-full text-center font-cinzel text-xs tracking-[0.2em] uppercase
                            text-bone/50 hover:text-error border-b border-bone/10 hover:border-error/60
-                           pb-1 transition-colors">
+                           pb-1 cursor-pointer transition-colors">
                 {{ __('Sever the Connection') }}
             </button>
         </form>

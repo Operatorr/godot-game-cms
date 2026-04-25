@@ -2,17 +2,18 @@
 <div class="bg-base-300 border-b border-base-100 fixed top-0 left-0 right-0 z-50">
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 		<div class="flex items-center justify-between h-10">
-			<!-- Left: CTA -->
-			<a href="/register" class="btn btn-primary btn-xs sm:btn-sm gap-2 font-semibold animate-pulse-glow">
-				<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-				</svg>
-				<span class="hidden sm:inline">Get Access Now!</span>
-				<span class="sm:hidden">Access</span>
+			<!-- Left: Site tag -->
+			@guest
+			<a href="/register" class="text-xs sm:text-sm text-secondary font-semibold tracking-wide text-shadow-gold hover:text-secondary/80 transition-colors">
+				Get Access Now!
 			</a>
+			@else
+			<span></span>
+			@endguest
 
 			<!-- Right: Auth & Utility Links -->
 			<div class="flex items-center gap-2 sm:gap-4">
+				@guest
 				<!-- Sign In -->
 				<a href="/login" class="text-xs sm:text-sm text-bone/70 hover:text-secondary transition-colors font-medium hidden sm:block">
 					Sign In
@@ -25,6 +26,28 @@
 
 				<!-- Divider -->
 				<span class="hidden md:block text-bone/30">|</span>
+				@else
+				<!-- Account Link -->
+				<a href="{{ route('dashboard') }}" class="text-xs sm:text-sm text-bone/70 hover:text-secondary transition-colors font-medium hidden sm:block">
+					{{ Auth::user()->name }}
+				</a>
+
+				<!-- Account -->
+				<a href="{{ route('dashboard') }}" class="text-xs sm:text-sm text-bone/70 hover:text-secondary transition-colors font-medium hidden md:block">
+					Account
+				</a>
+
+				<!-- Log Out -->
+				<form method="POST" action="{{ route('logout') }}" class="hidden md:block">
+					@csrf
+					<button type="submit" class="text-xs sm:text-sm text-bone/70 hover:text-secondary transition-colors font-medium">
+						Log Out
+					</button>
+				</form>
+
+				<!-- Divider -->
+				<span class="hidden md:block text-bone/30">|</span>
+				@endguest
 
 				<!-- Support -->
 				<a href="/support" class="text-xs sm:text-sm text-bone/70 hover:text-secondary transition-colors font-medium">

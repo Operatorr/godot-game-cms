@@ -7,7 +7,7 @@
                 glow-blood hover:animate-pulse-glow
                 hover:bg-primary/90 active:bg-primary
                 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 focus:ring-offset-base-300
-                transition-all duration-200'
+                cursor-pointer transition-all duration-200'
 ]) }}>
     <span class="relative">{{ $slot }}</span>
     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
